@@ -1,11 +1,12 @@
 import * as THREE from "three";
-import * as CANNON from 'cannon-es';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Game from "../game";
-import { Object3D } from "three";
 
 const pathFloorTexture = process.env.PUBLIC_URL + "/img/protoGrey.png";
+const pathPlayer3DModel = process.env.PUBLIC_URL + "/models/Xbot.glb";
+const pathCristal3DModel = process.env.PUBLIC_URL + "/models/glowing_cristal/scene.gltf";
 
-export default class Objects extends Object3D {
+export default class Objects extends THREE.Object3D {
 
     constructor() {
 
@@ -14,7 +15,7 @@ export default class Objects extends Object3D {
         this.removeElements = this.removeElements.bind(this);
 
         this.world = null;
-        this.elementsContainer = new Object3D();
+        this.elementsContainer = new THREE.Object3D();
         this.add(this.elementsContainer);
         this.currentElements = [];
 
@@ -23,10 +24,6 @@ export default class Objects extends Object3D {
 
     init() {
         console.log("objectsInit");
-
-        // Init physics world
-        this.world = new CANNON.World();
-        this.world.gravity = new CANNON.Vec3(0, -9.82, 0); // m/s²
 
         this.fixedTimeStep = 1.0 / Game.FPS; // seconds
         this.maxSubSteps = 10;
@@ -43,66 +40,14 @@ export default class Objects extends Object3D {
         floorMesh.receiveShadow = true;
         this.add(floorMesh);
 
-        // Add physics ground
-        const groundBody = new CANNON.Body({
-            type: CANNON.Body.STATIC,
-            shape: new CANNON.Plane(),
-        })
-        groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0) // make it face up
-        groundBody.position = new CANNON.Vec3(0, -0.5, 0);
-        this.world.addBody(groundBody)
-
-
-        // Create a sphere body
-        const radius = 1 // m
-        this.sphereBody = new CANNON.Body({
-            mass: 5, // kg
-            shape: new CANNON.Sphere(radius),
-        })
-        this.sphereBody.position.set(3, 10, 3); // m
-        this.world.addBody(this.sphereBody);
-
-        const phySphereGeometry = new THREE.SphereGeometry(0.5, 20, 20);
-        const phySphereMaterial = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
-        phySphereMaterial.metalness = 0.5;
-        this.phySphereMesh = new THREE.Mesh(phySphereGeometry, phySphereMaterial);
-        this.phySphereMesh.castShadow = true;
-        this.add(this.phySphereMesh);
-
-        // Create a box body
-        const size = 1 // m
-        const halfExtents = new CANNON.Vec3(size, size, size);
-        this.boxBody = new CANNON.Body({
-            mass: 5, // kg
-            shape: new CANNON.Box(halfExtents),
-        })
-        this.boxBody.position.set(3.55, 12, 3.5); // m
-        this.world.addBody(this.boxBody);
-
-        const phyBoxGeometry = new THREE.BoxGeometry(size, size, size);
-        const phyBoxMaterial = new THREE.MeshStandardMaterial({ color: 0xFFFFFF });
-        phyBoxMaterial.metalness = 0.5;
-        this.phyBoxMesh = new THREE.Mesh(phyBoxGeometry, phyBoxMaterial);
-        this.phyBoxMesh.castShadow = true;
-        this.add(this.phyBoxMesh);
+        this.glftLoader = new GLTFLoader();
     }
 
     update() {
-        // Run the simulation independently of framerate every 1 / 60 ms
-        this.world.fixedStep();
 
-        this.relateMeshToBody(this.phySphereMesh, this.sphereBody);
-        this.relateMeshToBody(this.phyBoxMesh, this.boxBody);
     }
 
-    relateMeshToBody(mesh, physicsBody) {
-        mesh.position.copy(physicsBody.position);
-        mesh.quaternion.copy(physicsBody.quaternion);
-    }
-
-
-    addElements(elements) {
-
+    addBasicElements(elements) {
 
         for (let i = 0; i < elements.length; i++) {
 
@@ -119,17 +64,61 @@ export default class Objects extends Object3D {
 
         }
 
-
-
     }
 
+    addPlayer() {
+        let currentBaseAction = 'run';
+        const allActions = [];
+        const baseActions = {
+            idle: { weight: 1 },
+            walk: { weight: 0 },
+            run: { weight: 0 }
+        };
 
+        this.glftLoader.load( 'models/gltf/Xbot.glb', function ( gltf ) {
+
+            const model = gltf.scene;
+            this.elementsContainer.add( model );
+
+            model.traverse( function ( object ) {
+
+                if ( object.isMesh ) object.castShadow = true;
+
+            } );
+            
+            const skeleton = new THREE.SkeletonHelper( model );
+            skeleton.visible = false;
+            this.elementsContainer.add( skeleton );
+
+            const animations = gltf.animations;
+            const mixer = new THREE.AnimationMixer( model );
+
+            var numAnimations = animations.length;
+
+            for ( let i = 0; i !== numAnimations; ++ i ) {
+
+                let clip = animations[ i ];
+                const name = clip.name;
+
+                if ( baseActions[ name ] ) {
+
+                    const action = mixer.clipAction( clip );
+                    action.play();
+                    baseActions[ name ].action = action;
+                    allActions.push( action );
+
+                }
+            }
+
+        } );
+    }
+
+    addCristal() {
+        var cristal3DModel = this.glftLoader.load(pathCristal3DModel).scene.children[0];
+        this.elementsContainer.add(cristal3DModel);
+    }
 
     removeElements() {
-        // while (this.children.length > 0) {
-        //     console.log(this.children[0])
-        //     this.remove(this.children[0]);
-        // }
 
         for (let i = 0; i < this.currentElements.length; i++) {
 

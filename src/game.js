@@ -9,13 +9,50 @@ import { Vector3 } from "three";
 
 const skyFloorTexture = process.env.PUBLIC_URL + "/img/sky.jpg";
 
+export const sceneConfiguration = {
+    FPS : 60,
+
+    // Stage of the game
+    stageGame: {
+        readyStage: 0,
+        runningStage: 1,
+        finishStage: 2,
+    },
+
+    // Whether the scene is ready
+    ready: false,
+
+    // Collected game data
+    data: {
+        // How many crystals the player has collected on this run
+        crystalsCollected: 0,
+    },
+
+    // The length of the current level, increases as levels go up
+    courseLength: 500,
+
+    // How far the player is through the current level, initialises to zero.
+    courseProgress: 0,
+
+    // Whether the level has finished
+    levelOver: false,
+
+    // Gives the completion amount of the course thus far, from 0.0 to 1.0.
+    coursePercentComplete: () => (sceneConfiguration.courseProgress / sceneConfiguration.courseLength),
+
+    // Whether the start animation is playing (the circular camera movement while looking at the ship)
+    cameraStartAnimationPlaying: false,
+
+    // The current speed of the player
+    speed: 0.0
+}
 
 class Game extends THREE.EventDispatcher {
     constructor() {
 
         super();
 
-        this.FPS = 60;
+
         this.totalNumberOfObjects = 4;
 
         this.init = this.init.bind(this);
@@ -53,9 +90,6 @@ class Game extends THREE.EventDispatcher {
         this.initGame();
         this.initEvents();
         this.debug();
-
-        // Init physics in the scene
-
 
         //START ENGINE
         gsap.ticker.add(this.update);
@@ -168,37 +202,11 @@ class Game extends THREE.EventDispatcher {
 
 
     initGame() {
-
-
         this.objects = new Objects();
-        this.objects.addElements([
-            {
-                geometry: new THREE.BoxGeometry(1, 1, 1),
-                color: 0xbf2121,
-                position: new THREE.Vector3(0, 0.5, 0)
-            },
-            {
-                geometry: new THREE.SphereGeometry(0.5, 20, 20),
-                color: 0x307337,
-                position: new THREE.Vector3(3, 0.5, 0)
-            },
-            {
-                geometry: new THREE.ConeGeometry(0.5, 1, 20),
-                color: 0xbf9319,
-                position: new THREE.Vector3(6, 0.5, 0)
-            },
-            {
-                geometry: new THREE.CylinderGeometry(0.5, 0.5, 1, 20),
-                color: 0x2331a8,
-                position: new THREE.Vector3(9, 0.5, 0)
-            }
-        ]);
-
+        this.objects.addPlayer();
+        //this.objects.addCristal();
 
         this.scene.add(this.objects);
-
-
-
     }
 
 
