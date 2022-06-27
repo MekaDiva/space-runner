@@ -11,10 +11,10 @@ class Ui extends THREE.EventDispatcher {
 
         super();
 
-        this.uiInit = this.uiInit.bind(this);
+        this.init = this.init.bind(this);
     }
 
-    uiInit() {
+    init() {
         
     }
 

@@ -1,10 +1,10 @@
 import * as THREE from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Game from "../game";
+// import AstroRaw from "objects/AstroRaw";
 
 const pathFloorTexture = process.env.PUBLIC_URL + "/img/protoGrey.png";
-const pathPlayer3DModel = process.env.PUBLIC_URL + "/models/Xbot.glb";
-const pathCristal3DModel = process.env.PUBLIC_URL + "/models/glowing_cristal/scene.gltf";
+const pathAstroGlbFile = process.env.PUBLIC_URL + "/models/astro.glb";
 
 export default class Objects extends THREE.Object3D {
 
@@ -12,14 +12,16 @@ export default class Objects extends THREE.Object3D {
 
         super();
 
-        this.removeElements = this.removeElements.bind(this);
+        this.init = this.init.bind(this);
+        this.update = this.update.bind(this);
+        this.destroy = this.destroy.bind(this);
 
-        this.world = null;
+        this.addBasicElements = this.addBasicElements.bind(this);
+        this.addPath = this.addPath.bind(this);
+
         this.elementsContainer = new THREE.Object3D();
         this.add(this.elementsContainer);
         this.currentElements = [];
-
-        this.init();
     }
 
     init() {
@@ -47,6 +49,17 @@ export default class Objects extends THREE.Object3D {
 
     }
 
+    destroy() {
+
+        for (let i = 0; i < this.currentElements.length; i++) {
+
+            this.elementsContainer.remove(this.currentElements[i]);
+            // this.currentElements[i].material.dispose();
+            // this.currentElements[i].geometry.dispose();
+        }
+
+    }
+
     addBasicElements(elements) {
 
         for (let i = 0; i < elements.length; i++) {
@@ -66,75 +79,30 @@ export default class Objects extends THREE.Object3D {
 
     }
 
-    addPlayer() {
-        let currentBaseAction = 'run';
-        const allActions = [];
-        const baseActions = {
-            idle: { weight: 1 },
-            walk: { weight: 0 },
-            run: { weight: 0 }
-        };
-
-        this.glftLoader.load( 'models/gltf/Xbot.glb', function ( gltf ) {
-
-            const model = gltf.scene;
-            this.elementsContainer.add( model );
-
-            model.traverse( function ( object ) {
-
-                if ( object.isMesh ) object.castShadow = true;
-
-            } );
-            
-            const skeleton = new THREE.SkeletonHelper( model );
-            skeleton.visible = false;
-            this.elementsContainer.add( skeleton );
-
-            const animations = gltf.animations;
-            const mixer = new THREE.AnimationMixer( model );
-
-            var numAnimations = animations.length;
-
-            for ( let i = 0; i !== numAnimations; ++ i ) {
-
-                let clip = animations[ i ];
-                const name = clip.name;
-
-                if ( baseActions[ name ] ) {
-
-                    const action = mixer.clipAction( clip );
-                    action.play();
-                    baseActions[ name ].action = action;
-                    allActions.push( action );
-
-                }
+    addPath(courseLength) {
+        // Add two wall on left and right and back
+        this.addBasicElements([
+            {
+                geometry: new THREE.BoxGeometry(1, 0.5, courseLength),
+                color: 0xbf2121,
+                position: new THREE.Vector3(4, 0, courseLength / 2 - 4)
+            },
+            {
+                geometry: new THREE.BoxGeometry(1, 0.5, courseLength),
+                color: 0xbf2121,
+                position: new THREE.Vector3(-4, 0, courseLength / 2 - 4)
+            },
+            {
+                geometry: new THREE.BoxGeometry(9, 0.5, 1),
+                color: 0xbf2121,
+                position: new THREE.Vector3(0, 0, -4)
             }
+        ]);
 
-        } );
+        
     }
-
-    addCristal() {
-        var cristal3DModel = this.glftLoader.load(pathCristal3DModel).scene.children[0];
-        this.elementsContainer.add(cristal3DModel);
-    }
-
-    removeElements() {
-
-        for (let i = 0; i < this.currentElements.length; i++) {
-
-            this.elementsContainer.remove(this.currentElements[i]);
-            // this.currentElements[i].material.dispose();
-            // this.currentElements[i].geometry.dispose();
-        }
-
-    }
-
-
-
 
     get container() {
         return this.elementsContainer;
     }
-
-
 }

@@ -4,6 +4,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Sky } from "three/examples/jsm/objects/Sky";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import Objects from "game/objects";
+import Player from "game/player";
 import Ui from "game/ui";
 import { Vector3 } from "three";
 
@@ -24,8 +25,8 @@ export const sceneConfiguration = {
 
     // Collected game data
     data: {
-        // How many crystals the player has collected on this run
-        crystalsCollected: 0,
+        // How many oil the player has collected on this run
+        oilCollected: 0,
     },
 
     // The length of the current level, increases as levels go up
@@ -86,14 +87,13 @@ class Game extends THREE.EventDispatcher {
 
         this.initEngine();
         this.initSky();
-        this.iniUi();
         this.initGame();
         this.initEvents();
         this.debug();
 
         //START ENGINE
-        gsap.ticker.add(this.update);
         gsap.ticker.fps(this.FPS);
+        gsap.ticker.add(this.update);
         //this.update();
     }
 
@@ -195,21 +195,27 @@ class Game extends THREE.EventDispatcher {
     }
 
 
-    iniUi() {
-        // Init ui in the scene
-        Ui.uiInit();
-    }
-
-
     initGame() {
+        // Init the UI
+        Ui.init();
+
+        // Add the surrounding objects
         this.objects = new Objects();
-        this.objects.addPlayer();
-        //this.objects.addCristal();
+        this.objects.init();
+
+        this.objects.addPath(sceneConfiguration.courseLength);
 
         this.scene.add(this.objects);
+
+        // Add the player
+        this.player = new Player();
+        this.player.init();
+        
+        this.player.addPlayer();
+
+        this.scene.add(this.player);
+
     }
-
-
 
     initEvents() {
 
@@ -221,9 +227,6 @@ class Game extends THREE.EventDispatcher {
 
     }
 
-
-
-
     debug() {
         // Add the stats ui
         this.stats = new Stats();
@@ -232,7 +235,14 @@ class Game extends THREE.EventDispatcher {
 
 
     keypress(e) {
-        
+        if (e.key == "1") {
+            this.start();
+        }
+
+        if (e.key == "2") {
+            this.reset();
+        }
+
         if (e.key == "a") {
             this.switchLeft();
         }
@@ -243,25 +253,19 @@ class Game extends THREE.EventDispatcher {
     }
 
     update() {
-
-        // console.log("update");
-
-        // requestAnimationFrame(this.update);
-
+        // Update the stats ui in the scene
         this.stats.update();
 
-        // Update objects in the scene
+        // Update the objects in the scene
         this.objects.update();
+
+        // Update the player in the scene
+        this.player.update();
 
         this.renderer.render(this.scene, this.camera);
 
-
-
         // console.log(this.renderer.info.render.triangles + " tri");
         // console.log(this.renderer.info.render.calls+ " call");
-
-
-
     }
 
     playableResize() {
@@ -278,6 +282,10 @@ class Game extends THREE.EventDispatcher {
         }, 500);
     }
 
+    start() {
+        console.log("start");
+    }
+
     reset() {
 
         console.log("reset");
@@ -292,31 +300,12 @@ class Game extends THREE.EventDispatcher {
 
     switchLeft() {
         console.log("Switch left")
-    
 
-        this.indexPosition -= 1;
-        if (this.indexPosition <= -1) {
-            this.indexPosition = 3;
-        }
-        gsap.to(this.objects.container.position, { duration: 0.5, x: (-3 * this.indexPosition), ease: "back" });
-
-        // Add selection animation
-        gsap.to(this.objects.container.children[this.indexPosition].position, { duration: 0.2, y: 1, ease: "power2" });
-        gsap.to(this.objects.container.children[this.indexPosition].position, { duration: 0.7, y: 0.5, ease: "bounce" }).delay(0.2);
     }
 
     switchRight() {
         console.log("Switch right");
 
-        this.indexPosition += 1;
-        if (this.indexPosition >= this.totalNumberOfObjects) {
-            this.indexPosition = 0;
-        }
-        gsap.to(this.objects.container.position, { duration: 0.5, x: (-3 * this.indexPosition), ease: "back" });
-
-        // Add selection animation
-        gsap.to(this.objects.container.children[this.indexPosition].position, { duration: 0.2, y: 1, ease: "power2" });
-        gsap.to(this.objects.container.children[this.indexPosition].position, { duration: 0.7, y: 0.5, ease: "bounce" }).delay(0.2);
     }
 
 
