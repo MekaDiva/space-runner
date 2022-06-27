@@ -6,7 +6,6 @@ import Stats from "three/examples/jsm/libs/stats.module.js";
 import Objects from "game/objects";
 import Player from "game/player";
 import Ui from "game/ui";
-import { Vector3 } from "three";
 
 const skyFloorTexture = process.env.PUBLIC_URL + "/img/sky.jpg";
 
@@ -21,7 +20,7 @@ export const sceneConfiguration = {
     },
 
     // Whether the scene is ready
-    ready: false,
+    sceneReady: false,
 
     // Collected game data
     data: {
@@ -34,6 +33,12 @@ export const sceneConfiguration = {
 
     // How far the player is through the current level, initialises to zero.
     courseProgress: 0,
+
+    // How for between each line of Obstacles
+    lengthBetweenObstacle: 15,
+
+    // Number of maximum oil in a line
+    maximumOilInLine: 3,
 
     // Whether the level has finished
     levelOver: false,

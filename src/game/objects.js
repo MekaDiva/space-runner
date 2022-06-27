@@ -1,10 +1,10 @@
 import * as THREE from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import Game from "../game";
+import Game, { sceneConfiguration } from "../game";
 // import AstroRaw from "objects/AstroRaw";
 
 const pathFloorTexture = process.env.PUBLIC_URL + "/img/protoGrey.png";
-const pathAstroGlbFile = process.env.PUBLIC_URL + "/models/astro.glb";
+const pathOilTexture = process.env.PUBLIC_URL + "/img/Oil.png";
 
 export default class Objects extends THREE.Object3D {
 
@@ -16,12 +16,17 @@ export default class Objects extends THREE.Object3D {
         this.update = this.update.bind(this);
         this.destroy = this.destroy.bind(this);
 
-        this.addBasicElements = this.addBasicElements.bind(this);
+        this.addBasicGeometries = this.addBasicGeometries.bind(this);
         this.addPath = this.addPath.bind(this);
 
-        this.elementsContainer = new THREE.Object3D();
-        this.add(this.elementsContainer);
-        this.currentElements = [];
+        this.visualObjectsContainer = new THREE.Object3D();
+        this.add(this.visualObjectsContainer);
+
+        this.obstaclesContainer = new THREE.Object3D();
+        this.add(this.obstaclesContainer);
+
+        this.awardsContainer = new THREE.Object3D();
+        this.add(this.awardsContainer);
     }
 
     init() {
@@ -40,7 +45,7 @@ export default class Objects extends THREE.Object3D {
         const floorMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1000, 1000), floorMaterial);
         floorMesh.rotation.x = - Math.PI / 2;
         floorMesh.receiveShadow = true;
-        this.add(floorMesh);
+        this.visualObjectsContainer.add(floorMesh);
 
         this.glftLoader = new GLTFLoader();
     }
@@ -53,14 +58,80 @@ export default class Objects extends THREE.Object3D {
 
         for (let i = 0; i < this.currentElements.length; i++) {
 
-            this.elementsContainer.remove(this.currentElements[i]);
+            this.obstaclesContainer.remove(this.currentElements[i]);
             // this.currentElements[i].material.dispose();
             // this.currentElements[i].geometry.dispose();
         }
 
     }
 
-    addBasicElements(elements) {
+    addPath() {
+        // Add two wall on left and right and back
+        this.addBasicGeometries([
+            {
+                type: 'obstacle',
+                geometry: new THREE.BoxGeometry(1, 0.5, sceneConfiguration.courseLength),
+                color: 0xbf2121,
+                position: new THREE.Vector3(4, 0, sceneConfiguration.courseLength / 2 - 4)
+            },
+            {
+                type: 'obstacle',
+                geometry: new THREE.BoxGeometry(1, 0.5, sceneConfiguration.courseLength),
+                color: 0xbf2121,
+                position: new THREE.Vector3(-4, 0, sceneConfiguration.courseLength / 2 - 4)
+            },
+            {
+                type: 'obstacle',
+                geometry: new THREE.BoxGeometry(9, 0.5, 1),
+                color: 0xbf2121,
+                position: new THREE.Vector3(0, 0, -4)
+            }
+        ]);
+
+        // Add oil image and wall on the path
+        const nbLineObstacle = parseInt(sceneConfiguration.courseLength / sceneConfiguration.lengthBetweenObstacle);
+        for (let indexLine = 0; indexLine < nbLineObstacle; indexLine++) {
+            // Create a dictionary for each line of the identity of each object
+            var dictOfObjectsInRow = {
+                0: 'wall',
+                1: 'wall',
+                2: 'wall',
+                3: 'wall',
+            }
+
+            // for (let index = 0; index < sceneConfiguration.maximumOilInLine; index++) {
+            //     var indexOfOil = this.randomNum(0, 3);
+            //     dictOfObjectsInRow[indexOfOil] = 'oil';
+            // }
+
+            // console.log(dictOfObjectsInRow);
+
+            // According to the dictionary add the object to the line
+            for (let index = 0; index < 4; index++) {
+                if (dictOfObjectsInRow[index] == 'wall') {
+                    // Create a wall
+                    this.addBasicGeometries([
+                        {
+                            type: 'obstacle',
+                            geometry: new THREE.BoxGeometry(0.5, 0.5, 0.3),
+                            color: 0xbf2121,
+                            position: new THREE.Vector3((2.625 - 7 / 4 * index), 0, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 10)
+                        }])
+                }
+                else if (dictOfObjectsInRow[index] == 'oil') {
+                    // Create a oil
+                    this.addBasicSprites([
+                        {
+                            type: 'award',
+                            size: new THREE.Vector2(0.5, 0.5),
+                            position: new THREE.Vector3((-3.5 + 7 / 4 * index), 0.1, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 10)
+                        }])
+                }
+            }
+        }
+    }
+
+    addBasicGeometries(elements) {
 
         for (let i = 0; i < elements.length; i++) {
 
@@ -72,37 +143,50 @@ export default class Objects extends THREE.Object3D {
             const mesh = new THREE.Mesh(element.geometry, material);
             mesh.position.copy(element.position);
             mesh.castShadow = true;
-            this.elementsContainer.add(mesh);
-            this.currentElements.push(mesh);
-
+            if (element.type == 'obstacle') {
+                this.obstaclesContainer.add(mesh);
+            }
+            else if (element.type == 'award') {
+                this.awardsContainer.add(mesh);
+            }
         }
 
     }
 
-    addPath(courseLength) {
-        // Add two wall on left and right and back
-        this.addBasicElements([
-            {
-                geometry: new THREE.BoxGeometry(1, 0.5, courseLength),
-                color: 0xbf2121,
-                position: new THREE.Vector3(4, 0, courseLength / 2 - 4)
-            },
-            {
-                geometry: new THREE.BoxGeometry(1, 0.5, courseLength),
-                color: 0xbf2121,
-                position: new THREE.Vector3(-4, 0, courseLength / 2 - 4)
-            },
-            {
-                geometry: new THREE.BoxGeometry(9, 0.5, 1),
-                color: 0xbf2121,
-                position: new THREE.Vector3(0, 0, -4)
-            }
-        ]);
+    addBasicSprites(elements) {
 
-        
+        for (let index = 0; index < elements.length; index++) {
+            const element = elements[index];
+
+            const texture = new THREE.TextureLoader().load(pathOilTexture);
+            texture.anisotrophy = 16;
+            texture.encoding = THREE.sRGBEncoding;
+            const material = new THREE.MeshStandardMaterial({ map: texture });
+
+            const spriteMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(element.size, element.size), material);
+            spriteMesh.position.copy(element.position);
+            spriteMesh.castShadow = true;
+            if (element.type == 'obstacle') {
+                this.obstaclesContainer.add(spriteMesh);
+            }
+            else if (element.type == 'award') {
+                this.awardsContainer.add(spriteMesh);
+            }
+        }
     }
 
-    get container() {
-        return this.elementsContainer;
+    // Returns the random number in [minNum,maxNum]
+    randomNum(minNum, maxNum) {
+        switch (arguments.length) {
+            case 1:
+                return parseInt(Math.random() * minNum + 1, 10);
+                break;
+            case 2:
+                return parseInt(Math.random() * (maxNum - minNum + 1) + minNum, 10);
+                break;
+            default:
+                return 0;
+                break;
+        }
     }
 }
