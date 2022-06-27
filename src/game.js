@@ -22,6 +22,9 @@ export const sceneConfiguration = {
     // Whether the scene is ready
     sceneReady: false,
 
+    // Whether the player is moving
+    playerMoving: false,
+
     // Collected game data
     data: {
         // How many oil the player has collected on this run
@@ -49,8 +52,8 @@ export const sceneConfiguration = {
     // Whether the start animation is playing (the circular camera movement while looking at the ship)
     cameraStartAnimationPlaying: false,
 
-    // The current speed of the player
-    speed: 0.0
+    // The current speed of the player, unit/second
+    playerSpeed: 20
 }
 
 class Game extends THREE.EventDispatcher {
@@ -68,14 +71,16 @@ class Game extends THREE.EventDispatcher {
         this.reset = this.reset.bind(this);
         this.pause = this.pause.bind(this);
 
-        this.switchLeft = this.switchLeft.bind(this);
-        this.switchRight = this.switchRight.bind(this);
+        this.moveLeft = this.moveLeft.bind(this);
+        this.moveRight = this.moveRight.bind(this);
 
+        this.objects = null;
+        this.player = null;
         this.renderer = null;
         this.scene = null;
         this.camera = null;
+        this.cameraControls = null;
         this.stats = null;
-        this.indexPosition = 0;
 
     }
 
@@ -97,7 +102,7 @@ class Game extends THREE.EventDispatcher {
         this.debug();
 
         //START ENGINE
-        gsap.ticker.fps(this.FPS);
+        gsap.ticker.fps(sceneConfiguration.FPS);
         gsap.ticker.add(this.update);
         //this.update();
     }
@@ -126,17 +131,17 @@ class Game extends THREE.EventDispatcher {
 
         dirLight.castShadow = true;
 
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.mapSize.width = 2048 * 100;
+        dirLight.shadow.mapSize.height = 2048 * 100;
 
-        const d = 10;
+        const d = 50;
 
         dirLight.shadow.camera.left = - d;
         dirLight.shadow.camera.right = d;
         dirLight.shadow.camera.top = d;
         dirLight.shadow.camera.bottom = - d;
 
-        dirLight.shadow.camera.far = 2500;
+        dirLight.shadow.camera.far = 250000;
         dirLight.shadow.bias = 0.0001;
 
         // Renderer configuration
@@ -150,16 +155,18 @@ class Game extends THREE.EventDispatcher {
 
         // Camera
         this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-        this.camera.position.set(0, 3, 10);
+        this.camera.position.set(-5, 3, -3);
+        //this.camera.rotation.set( 0, Math.PI, 0);
+        this.camera.lookAt(0, 0, 3);
 
         const axesHelper = new THREE.AxesHelper(3);
         this.scene.add(axesHelper);
 
-        const controls = new OrbitControls(this.camera, this.renderer.domElement);
-        controls.enablePan = false;
-        controls.enableZoom = true;
-        controls.maxPolarAngle = Math.PI / 2;
-        controls.target.set(0, 1, 0);
+        // this.cameraControls = new OrbitControls(this.camera, this.renderer.domElement);
+        // this.cameraControls.enablePan = false;
+        // this.cameraControls.enableZoom = true;
+        // this.cameraControls.maxPolarAngle = Math.PI / 2;
+        // this.cameraControls.target.set(0, 1, 0);
 
     }
 
@@ -249,11 +256,11 @@ class Game extends THREE.EventDispatcher {
         }
 
         if (e.key == "a") {
-            this.switchLeft();
+            this.moveLeft();
         }
 
         if (e.key == "d") {
-            this.switchRight();
+            this.moveRight();
         }
     }
 
@@ -267,10 +274,19 @@ class Game extends THREE.EventDispatcher {
         // Update the player in the scene
         this.player.update();
 
+        // Render the scene
         this.renderer.render(this.scene, this.camera);
 
         // console.log(this.renderer.info.render.triangles + " tri");
         // console.log(this.renderer.info.render.calls+ " call");
+
+        if (sceneConfiguration.playerMoving) {
+            this.objects.translateZ(-sceneConfiguration.playerSpeed / sceneConfiguration.FPS);
+            // var currentCameraPosition = this.camera.position;
+            // currentCameraPosition.z += sceneConfiguration.playerSpeed / sceneConfiguration.FPS;
+            // console.log(currentCameraPosition);
+            // this.camera.position.copy(currentCameraPosition);
+        }
     }
 
     playableResize() {
@@ -289,12 +305,19 @@ class Game extends THREE.EventDispatcher {
 
     start() {
         console.log("start");
+
+        sceneConfiguration.playerMoving = true;
+        this.player.idleClip.stop();
+        this.player.runClip.play();
     }
 
     reset() {
-
         console.log("reset");
 
+        sceneConfiguration.playerMoving = false;
+        this.player.runClip.stop();
+        this.player.idleClip.play();
+        this.objects.position.set(0, 0, 0);
     }
 
     pause() {
@@ -303,12 +326,13 @@ class Game extends THREE.EventDispatcher {
 
     }
 
-    switchLeft() {
+    moveLeft() {
         console.log("Switch left")
 
+        
     }
 
-    switchRight() {
+    moveRight() {
         console.log("Switch right");
 
     }

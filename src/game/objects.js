@@ -3,8 +3,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Game, { sceneConfiguration } from "../game";
 // import AstroRaw from "objects/AstroRaw";
 
-const pathFloorTexture = process.env.PUBLIC_URL + "/img/protoGrey.png";
+const pathFloorTexture = process.env.PUBLIC_URL + "/img/protoWhite.png";
 const pathOilTexture = process.env.PUBLIC_URL + "/img/Oil.png";
+//const pathOilTexture = process.env.PUBLIC_URL + "/img/protoGrey.png";
 
 export default class Objects extends THREE.Object3D {
 
@@ -99,10 +100,10 @@ export default class Objects extends THREE.Object3D {
                 3: 'wall',
             }
 
-            // for (let index = 0; index < sceneConfiguration.maximumOilInLine; index++) {
-            //     var indexOfOil = this.randomNum(0, 3);
-            //     dictOfObjectsInRow[indexOfOil] = 'oil';
-            // }
+            for (let index = 0; index < sceneConfiguration.maximumOilInLine; index++) {
+                var indexOfOil = this.randomNum(0, 3);
+                dictOfObjectsInRow[indexOfOil] = 'oil';
+            }
 
             // console.log(dictOfObjectsInRow);
 
@@ -115,7 +116,7 @@ export default class Objects extends THREE.Object3D {
                             type: 'obstacle',
                             geometry: new THREE.BoxGeometry(0.5, 0.5, 0.3),
                             color: 0xbf2121,
-                            position: new THREE.Vector3((2.625 - 7 / 4 * index), 0, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 10)
+                            position: new THREE.Vector3((2.625 - 7 / 4 * index), 0.25, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 5)
                         }])
                 }
                 else if (dictOfObjectsInRow[index] == 'oil') {
@@ -124,7 +125,7 @@ export default class Objects extends THREE.Object3D {
                         {
                             type: 'award',
                             size: new THREE.Vector2(0.5, 0.5),
-                            position: new THREE.Vector3((-3.5 + 7 / 4 * index), 0.1, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 10)
+                            position: new THREE.Vector3((2.625 - 7 / 4 * index), 0.1, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 5)
                         }])
                 }
             }
@@ -163,8 +164,9 @@ export default class Objects extends THREE.Object3D {
             texture.encoding = THREE.sRGBEncoding;
             const material = new THREE.MeshStandardMaterial({ map: texture });
 
-            const spriteMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(element.size, element.size), material);
+            const spriteMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(element.size.x, element.size.y), material);
             spriteMesh.position.copy(element.position);
+            spriteMesh.rotation.copy(new THREE.Euler( - Math.PI / 2, 0, Math.PI));
             spriteMesh.castShadow = true;
             if (element.type == 'obstacle') {
                 this.obstaclesContainer.add(spriteMesh);

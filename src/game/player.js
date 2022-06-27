@@ -18,6 +18,7 @@ export default class Player extends THREE.Object3D {
 
         this.addPlayer = this.addPlayer.bind(this);
         this.gltfLoaded = this.gltfLoaded.bind(this);
+        this.fbxLoaded = this.fbxLoaded.bind(this);
     }
 
     init() {
@@ -25,7 +26,9 @@ export default class Player extends THREE.Object3D {
         this.glftLoader = new GLTFLoader();
         this.fbxLoader = new FBXLoader();
         this.astro = new THREE.Object3D();
-
+        this.barrel = new THREE.Object3D();
+        
+        this.barrelMaterial = null;
         this.mixer = null;
         this.runClip = null;
         this.idleClip = null;
@@ -62,7 +65,7 @@ export default class Player extends THREE.Object3D {
         this.fbxLoader.load(
             // resource URL
             pathBarrelFbxFile,
-            this.gltfLoaded,
+            this.fbxLoaded,
             // called while loading is progressing
             function (xhr) {
                 //console.log((xhr.loaded / xhr.total * 100) + '% loaded');
@@ -82,8 +85,6 @@ export default class Player extends THREE.Object3D {
 
         // called when the resource is loaded
         let model = gltf.scene;
-        // model.children[3].material = astroMaterial;
-        // model.children[3].castShadow = true;
         model.children.map((object) => {
             if (object.type == "SkinnedMesh") {
                 object.material = astroMaterial;
@@ -95,8 +96,8 @@ export default class Player extends THREE.Object3D {
             }
         })
 
-        this.model3D = model;
-        this.add(this.model3D);
+        this.astro = model;
+        this.add(this.astro);
 
         this.mixer = new THREE.AnimationMixer(model);
 
@@ -108,18 +109,14 @@ export default class Player extends THREE.Object3D {
     }
 
     fbxLoaded(fbx) {
+        this.barrelMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff});
+        
         // called when the resource is loaded
-        let model = fbx.scene;
+        this.barrel = fbx;
+        this.barrel.children[0].material = this.barrelMaterial;
+        this.barrel.children[0].castShadow = true;
+        this.barrel.position.copy(new THREE.Vector3(0, 0, 1));
 
-        this.model3D = model;
-        this.add(this.model3D);
-
-        this.mixer = new THREE.AnimationMixer(model);
-
-        this.runClip = this.mixer.clipAction(gltf.animations[0]);
-
-        this.idleClip = this.mixer.clipAction(gltf.animations[1]);
-
-        this.idleClip.play();
+        this.add(this.barrel);
     }
 }
