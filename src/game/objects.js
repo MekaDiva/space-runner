@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Game, { sceneConfiguration } from "../game";
 // import AstroRaw from "objects/AstroRaw";
 
