@@ -109,7 +109,7 @@ export default class Player extends THREE.Object3D {
     }
 
     fbxLoaded(fbx) {
-        this.barrelMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff});
+        this.barrelMaterial = new THREE.MeshToonMaterial({ color: 0xffffff});
         
         // called when the resource is loaded
         this.barrel = fbx;

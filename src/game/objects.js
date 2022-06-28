@@ -116,7 +116,7 @@ export default class Objects extends THREE.Object3D {
                             type: 'obstacle',
                             geometry: new THREE.BoxGeometry(0.5, 0.5, 0.3),
                             color: 0xbf2121,
-                            position: new THREE.Vector3((2.625 - 7 / 4 * index), 0.25, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 5)
+                            position: new THREE.Vector3((2.5 - 5 / 3 * index), 0.25, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 5)
                         }])
                 }
                 else if (dictOfObjectsInRow[index] == 'oil') {
@@ -125,7 +125,7 @@ export default class Objects extends THREE.Object3D {
                         {
                             type: 'award',
                             size: new THREE.Vector2(0.5, 0.5),
-                            position: new THREE.Vector3((2.625 - 7 / 4 * index), 0.1, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 5)
+                            position: new THREE.Vector3((2.5 - 5 / 3 * index), 0.1, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 5)
                         }])
                 }
             }

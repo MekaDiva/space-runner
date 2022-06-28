@@ -6,6 +6,8 @@ import Stats from "three/examples/jsm/libs/stats.module.js";
 import Objects from "game/objects";
 import Player from "game/player";
 import Ui from "game/ui";
+import Tools from "game/tools";
+import CollisionDetection from "game/collisionDetection";
 
 const skyFloorTexture = process.env.PUBLIC_URL + "/img/sky.jpg";
 
@@ -53,7 +55,7 @@ export const sceneConfiguration = {
     cameraStartAnimationPlaying: false,
 
     // The current speed of the player, unit/second
-    playerSpeed: 20
+    playerSpeed: 10
 }
 
 class Game extends THREE.EventDispatcher {
@@ -70,9 +72,9 @@ class Game extends THREE.EventDispatcher {
         this.playableResize = this.playableResize.bind(this);
         this.reset = this.reset.bind(this);
         this.pause = this.pause.bind(this);
+        this.mousemove = this.mousemove.bind(this);
 
-        this.moveLeft = this.moveLeft.bind(this);
-        this.moveRight = this.moveRight.bind(this);
+        this.movePlayer = this.movePlayer.bind(this);
 
         this.objects = null;
         this.player = null;
@@ -81,7 +83,7 @@ class Game extends THREE.EventDispatcher {
         this.camera = null;
         this.cameraControls = null;
         this.stats = null;
-
+        this.positionRatio = null;
     }
 
     init() {
@@ -237,6 +239,8 @@ class Game extends THREE.EventDispatcher {
         // Add event handlers for clicking
         document.addEventListener('keypress', this.keypress, false);
 
+        // Add event handlers for mousemove
+        document.addEventListener('mousemove', this.mousemove, false);
     }
 
     debug() {
@@ -255,13 +259,17 @@ class Game extends THREE.EventDispatcher {
             this.reset();
         }
 
-        if (e.key == "a") {
-            this.moveLeft();
-        }
+        // if (e.key == "a") {
+        //     this.moveLeft();
+        // }
 
-        if (e.key == "d") {
-            this.moveRight();
-        }
+        // if (e.key == "d") {
+        //     this.moveRight();
+        // }
+    }
+
+    mousemove(e) {
+        this.positionRatio = e.clientX / window.innerWidth;
     }
 
     update() {
@@ -281,11 +289,14 @@ class Game extends THREE.EventDispatcher {
         // console.log(this.renderer.info.render.calls+ " call");
 
         if (sceneConfiguration.playerMoving) {
+            // Move the scene to the back
             this.objects.translateZ(-sceneConfiguration.playerSpeed / sceneConfiguration.FPS);
-            // var currentCameraPosition = this.camera.position;
-            // currentCameraPosition.z += sceneConfiguration.playerSpeed / sceneConfiguration.FPS;
-            // console.log(currentCameraPosition);
-            // this.camera.position.copy(currentCameraPosition);
+
+            // Move the player according to the mouse ratio
+            this.movePlayer(this.positionRatio);
+
+            // Detect the collision
+            CollisionDetection.detectCollisions();
         }
     }
 
@@ -315,6 +326,7 @@ class Game extends THREE.EventDispatcher {
         console.log("reset");
 
         sceneConfiguration.playerMoving = false;
+        this.player.position.set(0, 0, 0);
         this.player.runClip.stop();
         this.player.idleClip.play();
         this.objects.position.set(0, 0, 0);
@@ -326,17 +338,15 @@ class Game extends THREE.EventDispatcher {
 
     }
 
-    moveLeft() {
-        console.log("Switch left")
+    movePlayer(positionRatio) {
+        // Reduce the control to the 0.2 to 0.8 of the screen width
+        let controlRatio = Tools.remapValue(0.2, 0.8, positionRatio, 0, 1);
+        //console.log("Control ratio: " + controlRatio);
 
-        
+        let playerX = Tools.lerp(2.5, -2.5, controlRatio);
+        // console.log("playerX: " + playerX);
+        this.player.position.set(playerX, 0, 0);
     }
-
-    moveRight() {
-        console.log("Switch right");
-
-    }
-
 
 }
 
