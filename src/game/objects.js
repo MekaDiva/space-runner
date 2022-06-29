@@ -1,16 +1,14 @@
 import * as THREE from "three";
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import Game, { sceneConfiguration } from "../game";
-// import AstroRaw from "objects/AstroRaw";
+import Tools from "game/tools";
 
 const pathFloorTexture = process.env.PUBLIC_URL + "/img/protoWhite.png";
 const pathOilTexture = process.env.PUBLIC_URL + "/img/Oil.png";
 //const pathOilTexture = process.env.PUBLIC_URL + "/img/protoGrey.png";
 
 export default class Objects extends THREE.Object3D {
-
     constructor() {
-
         super();
 
         this.init = this.init.bind(this);
@@ -42,51 +40,54 @@ export default class Objects extends THREE.Object3D {
         floorTexture.repeat.set(1000, 1000);
         floorTexture.anisotrophy = 16;
         floorTexture.encoding = THREE.sRGBEncoding;
-        const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture })
+        const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture });
         const floorMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1000, 1000), floorMaterial);
-        floorMesh.rotation.x = - Math.PI / 2;
+        floorMesh.rotation.x = -Math.PI / 2;
         floorMesh.receiveShadow = true;
         this.visualObjectsContainer.add(floorMesh);
 
         this.glftLoader = new GLTFLoader();
     }
 
-    update() {
-
-    }
+    update() {}
 
     destroy() {
+        console.log("destroy called");
 
-        for (let i = 0; i < this.currentElements.length; i++) {
-
-            this.obstaclesContainer.remove(this.currentElements[i]);
-            // this.currentElements[i].material.dispose();
-            // this.currentElements[i].geometry.dispose();
+        while (this.visualObjectsContainer.children.length) {
+            this.visualObjectsContainer.remove(this.visualObjectsContainer.children[0]);
         }
 
+        while (this.obstaclesContainer.children.length) {
+            this.obstaclesContainer.remove(this.obstaclesContainer.children[0]);
+        }
+
+        while (this.awardsContainer.children.length) {
+            this.awardsContainer.remove(this.awardsContainer.children[0]);
+        }
     }
 
     addPath() {
         // Add two wall on left and right and back
         this.addBasicGeometries([
             {
-                type: 'obstacle',
+                type: "obstacle",
                 geometry: new THREE.BoxGeometry(1, 0.5, sceneConfiguration.courseLength),
                 color: 0xbf2121,
-                position: new THREE.Vector3(4, 0, sceneConfiguration.courseLength / 2 - 4)
+                position: new THREE.Vector3(4, 0, sceneConfiguration.courseLength / 2 - 4),
             },
             {
-                type: 'obstacle',
+                type: "obstacle",
                 geometry: new THREE.BoxGeometry(1, 0.5, sceneConfiguration.courseLength),
                 color: 0xbf2121,
-                position: new THREE.Vector3(-4, 0, sceneConfiguration.courseLength / 2 - 4)
+                position: new THREE.Vector3(-4, 0, sceneConfiguration.courseLength / 2 - 4),
             },
             {
-                type: 'obstacle',
+                type: "obstacle",
                 geometry: new THREE.BoxGeometry(9, 0.5, 1),
                 color: 0xbf2121,
-                position: new THREE.Vector3(0, 0, -4)
-            }
+                position: new THREE.Vector3(0, 0, -4),
+            },
         ]);
 
         // Add oil image and wall on the path
@@ -94,48 +95,47 @@ export default class Objects extends THREE.Object3D {
         for (let indexLine = 0; indexLine < nbLineObstacle; indexLine++) {
             // Create a dictionary for each line of the identity of each object
             var dictOfObjectsInRow = {
-                0: 'wall',
-                1: 'wall',
-                2: 'wall',
-                3: 'wall',
-            }
+                0: "wall",
+                1: "wall",
+                2: "wall",
+                3: "wall",
+            };
 
             for (let index = 0; index < sceneConfiguration.maximumOilInLine; index++) {
-                var indexOfOil = this.randomNum(0, 3);
-                dictOfObjectsInRow[indexOfOil] = 'oil';
+                var indexOfOil = Tools.randomNum(0, 3);
+                dictOfObjectsInRow[indexOfOil] = "oil";
             }
 
             // console.log(dictOfObjectsInRow);
 
             // According to the dictionary add the object to the line
             for (let index = 0; index < 4; index++) {
-                if (dictOfObjectsInRow[index] == 'wall') {
+                if (dictOfObjectsInRow[index] == "wall") {
                     // Create a wall
                     this.addBasicGeometries([
                         {
-                            type: 'obstacle',
+                            type: "obstacle",
                             geometry: new THREE.BoxGeometry(0.5, 0.5, 0.3),
                             color: 0xbf2121,
-                            position: new THREE.Vector3((2.5 - 5 / 3 * index), 0.25, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 5)
-                        }])
-                }
-                else if (dictOfObjectsInRow[index] == 'oil') {
+                            position: new THREE.Vector3(2.5 - (5 / 3) * index, 0.25, indexLine * sceneConfiguration.lengthBetweenObstacle + 5),
+                        },
+                    ]);
+                } else if (dictOfObjectsInRow[index] == "oil") {
                     // Create a oil
                     this.addBasicSprites([
                         {
-                            type: 'award',
+                            type: "award",
                             size: new THREE.Vector2(0.5, 0.5),
-                            position: new THREE.Vector3((2.5 - 5 / 3 * index), 0.1, (indexLine * sceneConfiguration.lengthBetweenObstacle) + 5)
-                        }])
+                            position: new THREE.Vector3(2.5 - (5 / 3) * index, 0.1, indexLine * sceneConfiguration.lengthBetweenObstacle + 5),
+                        },
+                    ]);
                 }
             }
         }
     }
 
     addBasicGeometries(elements) {
-
         for (let i = 0; i < elements.length; i++) {
-
             const element = elements[i];
 
             const material = new THREE.MeshStandardMaterial({ color: element.color });
@@ -144,18 +144,15 @@ export default class Objects extends THREE.Object3D {
             const mesh = new THREE.Mesh(element.geometry, material);
             mesh.position.copy(element.position);
             mesh.castShadow = true;
-            if (element.type == 'obstacle') {
+            if (element.type == "obstacle") {
                 this.obstaclesContainer.add(mesh);
-            }
-            else if (element.type == 'award') {
+            } else if (element.type == "award") {
                 this.awardsContainer.add(mesh);
             }
         }
-
     }
 
     addBasicSprites(elements) {
-
         for (let index = 0; index < elements.length; index++) {
             const element = elements[index];
 
@@ -166,29 +163,13 @@ export default class Objects extends THREE.Object3D {
 
             const spriteMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(element.size.x, element.size.y), material);
             spriteMesh.position.copy(element.position);
-            spriteMesh.rotation.copy(new THREE.Euler( - Math.PI / 2, 0, Math.PI));
+            spriteMesh.rotation.copy(new THREE.Euler(-Math.PI / 2, 0, Math.PI));
             spriteMesh.castShadow = true;
-            if (element.type == 'obstacle') {
+            if (element.type == "obstacle") {
                 this.obstaclesContainer.add(spriteMesh);
-            }
-            else if (element.type == 'award') {
+            } else if (element.type == "award") {
                 this.awardsContainer.add(spriteMesh);
             }
-        }
-    }
-
-    // Returns the random number in [minNum,maxNum]
-    randomNum(minNum, maxNum) {
-        switch (arguments.length) {
-            case 1:
-                return parseInt(Math.random() * minNum + 1, 10);
-                break;
-            case 2:
-                return parseInt(Math.random() * (maxNum - minNum + 1) + minNum, 10);
-                break;
-            default:
-                return 0;
-                break;
         }
     }
 }

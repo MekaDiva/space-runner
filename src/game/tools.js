@@ -6,16 +6,14 @@ class Tools {
 
     // Get a value between two values
     clamp(value, min, max) {
-
         if (value < min) {
             return min;
-        }
-        else if (value > max) {
+        } else if (value > max) {
             return max;
         }
 
         return value;
-    };
+    }
 
     // Get the portion using the value between min and max
     inverseLerp(min, max, value) {
@@ -31,7 +29,7 @@ class Tools {
         portion = portion > 1 ? 1 : portion;
         let value = min + (max - min) * portion;
         return value;
-    };
+    }
 
     // Get the new portion using the old portion
     remapPortion(inputMin, inputMax, inputPortion, outputMin, outputMax) {
@@ -47,6 +45,20 @@ class Tools {
         return outputValue;
     }
 
+    // Returns the random number in [minNum,maxNum]
+    randomNum(minNum, maxNum) {
+        switch (arguments.length) {
+            case 1:
+                return parseInt(Math.random() * minNum + 1, 10);
+                break;
+            case 2:
+                return parseInt(Math.random() * (maxNum - minNum + 1) + minNum, 10);
+                break;
+            default:
+                return 0;
+                break;
+        }
+    }
 }
 
-export default new Tools()
+export default new Tools();

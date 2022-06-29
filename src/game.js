@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { gsap } from 'gsap';
+import { gsap } from "gsap";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Sky } from "three/examples/jsm/objects/Sky";
 import Stats from "three/examples/jsm/libs/stats.module.js";
@@ -12,7 +12,7 @@ import CollisionDetection from "game/collisionDetection";
 const skyFloorTexture = process.env.PUBLIC_URL + "/img/sky.jpg";
 
 export const sceneConfiguration = {
-    FPS : 60,
+    FPS: 60,
 
     // Stage of the game
     stageGame: {
@@ -23,6 +23,9 @@ export const sceneConfiguration = {
 
     // Whether the scene is ready
     sceneReady: false,
+
+    // Whether the game is on pause
+    isPause: false,
 
     // Whether the player is moving
     playerMoving: false,
@@ -49,20 +52,18 @@ export const sceneConfiguration = {
     levelOver: false,
 
     // Gives the completion amount of the course thus far, from 0.0 to 1.0.
-    coursePercentComplete: () => (sceneConfiguration.courseProgress / sceneConfiguration.courseLength),
+    coursePercentComplete: () => sceneConfiguration.courseProgress / sceneConfiguration.courseLength,
 
     // Whether the start animation is playing (the circular camera movement while looking at the ship)
     cameraStartAnimationPlaying: false,
 
     // The current speed of the player, unit/second
-    playerSpeed: 10
-}
+    playerSpeed: 10,
+};
 
 class Game extends THREE.EventDispatcher {
     constructor() {
-
         super();
-
 
         this.totalNumberOfObjects = 4;
 
@@ -90,7 +91,7 @@ class Game extends THREE.EventDispatcher {
         console.log("init");
 
         // Document configuration
-        document.backgroundColor = "#FFFFFF"
+        document.backgroundColor = "#FFFFFF";
         document.body.style.margin = 0;
         document.body.style.display = "block";
         document.body.style["background-color"] = "#FFFFFF";
@@ -109,10 +110,7 @@ class Game extends THREE.EventDispatcher {
         //this.update();
     }
 
-
-
     initEngine() {
-
         // Scene configuration
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0xa0a0a0);
@@ -127,7 +125,7 @@ class Game extends THREE.EventDispatcher {
 
         const dirLight = new THREE.DirectionalLight(0xffffff, 1);
         dirLight.color.setHSL(0.1, 1, 0.95);
-        dirLight.position.set(- 1, 1.75, 1);
+        dirLight.position.set(-1, 1.75, 1);
         dirLight.position.multiplyScalar(30);
         this.scene.add(dirLight);
 
@@ -138,10 +136,10 @@ class Game extends THREE.EventDispatcher {
 
         const d = 50;
 
-        dirLight.shadow.camera.left = - d;
+        dirLight.shadow.camera.left = -d;
         dirLight.shadow.camera.right = d;
         dirLight.shadow.camera.top = d;
-        dirLight.shadow.camera.bottom = - d;
+        dirLight.shadow.camera.bottom = -d;
 
         dirLight.shadow.camera.far = 250000;
         dirLight.shadow.bias = 0.0001;
@@ -169,10 +167,7 @@ class Game extends THREE.EventDispatcher {
         // this.cameraControls.enableZoom = true;
         // this.cameraControls.maxPolarAngle = Math.PI / 2;
         // this.cameraControls.target.set(0, 1, 0);
-
     }
-
-
 
     initSky() {
         // Add Sky
@@ -193,21 +188,20 @@ class Game extends THREE.EventDispatcher {
         };
 
         const uniforms = sky.material.uniforms;
-        uniforms['turbidity'].value = effectController.turbidity;
-        uniforms['rayleigh'].value = effectController.rayleigh;
-        uniforms['mieCoefficient'].value = effectController.mieCoefficient;
-        uniforms['mieDirectionalG'].value = effectController.mieDirectionalG;
+        uniforms["turbidity"].value = effectController.turbidity;
+        uniforms["rayleigh"].value = effectController.rayleigh;
+        uniforms["mieCoefficient"].value = effectController.mieCoefficient;
+        uniforms["mieDirectionalG"].value = effectController.mieDirectionalG;
 
         const phi = THREE.MathUtils.degToRad(90 - effectController.elevation);
         const theta = THREE.MathUtils.degToRad(effectController.azimuth);
 
         sun.setFromSphericalCoords(1, phi, theta);
 
-        uniforms['sunPosition'].value.copy(sun);
+        uniforms["sunPosition"].value.copy(sun);
 
         this.renderer.toneMappingExposure = effectController.exposure;
     }
-
 
     initGame() {
         // Init the UI
@@ -224,23 +218,21 @@ class Game extends THREE.EventDispatcher {
         // Add the player
         this.player = new Player();
         this.player.init();
-        
+
         this.player.addPlayer();
 
         this.scene.add(this.player);
-
     }
 
     initEvents() {
-
         // Add event handlers for the resize of window
-        window.addEventListener('resize', this.playableResize, false);
+        window.addEventListener("resize", this.playableResize, false);
 
         // Add event handlers for clicking
-        document.addEventListener('keypress', this.keypress, false);
+        document.addEventListener("keypress", this.keypress, false);
 
         // Add event handlers for mousemove
-        document.addEventListener('mousemove', this.mousemove, false);
+        document.addEventListener("mousemove", this.mousemove, false);
     }
 
     debug() {
@@ -248,7 +240,6 @@ class Game extends THREE.EventDispatcher {
         this.stats = new Stats();
         document.body.appendChild(this.stats.dom);
     }
-
 
     keypress(e) {
         if (e.key == "1") {
@@ -273,42 +264,43 @@ class Game extends THREE.EventDispatcher {
     }
 
     update() {
-        // Update the stats ui in the scene
-        this.stats.update();
+        if (!sceneConfiguration.isPause) {
+            // Update the stats ui in the scene
+            this.stats.update();
 
-        // Update the objects in the scene
-        this.objects.update();
+            // Update the objects in the scene
+            this.objects.update();
 
-        // Update the player in the scene
-        this.player.update();
+            // Update the player in the scene
+            this.player.update();
 
-        // Render the scene
-        this.renderer.render(this.scene, this.camera);
+            // Render the scene
+            this.renderer.render(this.scene, this.camera);
 
-        // console.log(this.renderer.info.render.triangles + " tri");
-        // console.log(this.renderer.info.render.calls+ " call");
+            // console.log(this.renderer.info.render.triangles + " tri");
+            // console.log(this.renderer.info.render.calls+ " call");
 
-        if (sceneConfiguration.playerMoving) {
-            // Move the scene to the back
-            this.objects.translateZ(-sceneConfiguration.playerSpeed / sceneConfiguration.FPS);
+            if (sceneConfiguration.playerMoving) {
+                // Move the scene to the back
+                this.objects.translateZ(-sceneConfiguration.playerSpeed / sceneConfiguration.FPS);
 
-            // Move the player according to the mouse ratio
-            this.movePlayer(this.positionRatio);
+                // Move the player according to the mouse ratio
+                this.movePlayer(this.positionRatio);
 
-            // Detect the collision
-            CollisionDetection.detectCollisions();
+                // Detect the collision
+                CollisionDetection.detectCollisions();
+            }
         }
     }
 
     playableResize() {
-
         console.log("playableResize");
 
-        this.camera.aspect = window.innerWidth / window.innerHeight
-        this.camera.updateProjectionMatrix()
-        this.renderer.setSize(window.innerWidth, window.innerHeight)
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-        //Force iOS view resize 
+        //Force iOS view resize
         setTimeout(() => {
             window.scrollTo(0, 1);
         }, 500);
@@ -325,17 +317,24 @@ class Game extends THREE.EventDispatcher {
     reset() {
         console.log("reset");
 
+        // Reset the player
         sceneConfiguration.playerMoving = false;
         this.player.position.set(0, 0, 0);
         this.player.runClip.stop();
         this.player.idleClip.play();
         this.objects.position.set(0, 0, 0);
+        sceneConfiguration.data.oilCollected = 0;
+
+        // Reset all the objects
+        this.objects.destroy();
+        this.objects.init();
+        this.objects.addPath(sceneConfiguration.courseLength);
     }
 
     pause() {
-
         console.log("pause");
 
+        sceneConfiguration.isPause = true;
     }
 
     movePlayer(positionRatio) {
@@ -348,6 +347,13 @@ class Game extends THREE.EventDispatcher {
         this.player.position.set(playerX, 0, 0);
     }
 
+    playerDie() {
+        console.log("playerDie");
+
+        sceneConfiguration.playerMoving = false;
+        this.player.runClip.stop();
+        this.player.idleClip.play();
+    }
 }
 
-export default new Game()
+export default new Game();
