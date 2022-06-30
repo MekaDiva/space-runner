@@ -1,11 +1,12 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 import Game, { sceneConfiguration } from "../game";
 import Tools from "game/tools";
+import { waitFor } from "@testing-library/react";
 
 const pathFloorTexture = process.env.PUBLIC_URL + "/img/protoWhite.png";
-const pathOilTexture = process.env.PUBLIC_URL + "/img/Oil.png";
-//const pathOilTexture = process.env.PUBLIC_URL + "/img/protoGrey.png";
+const pathBarrelFbxFile = process.env.PUBLIC_URL + "/models/Baril.FBX";
 
 export default class Objects extends THREE.Object3D {
     constructor() {
@@ -15,8 +16,9 @@ export default class Objects extends THREE.Object3D {
         this.update = this.update.bind(this);
         this.destroy = this.destroy.bind(this);
 
-        this.addBasicGeometries = this.addBasicGeometries.bind(this);
         this.addPath = this.addPath.bind(this);
+        this.addBasicGeometries = this.addBasicGeometries.bind(this);
+        this.addFbxModel = this.addFbxModel.bind(this);
 
         this.visualObjectsContainer = new THREE.Object3D();
         this.add(this.visualObjectsContainer);
@@ -26,9 +28,15 @@ export default class Objects extends THREE.Object3D {
 
         this.awardsContainer = new THREE.Object3D();
         this.add(this.awardsContainer);
+
+        // True if all the loader is done loading
+        this.loaderLoaded = false;
+
+        // The mesh model of the barrel
+        this.barrelModel = null;
     }
 
-    init() {
+    async init() {
         console.log("objectsInit");
 
         this.fixedTimeStep = 1.0 / Game.FPS; // seconds
@@ -47,9 +55,15 @@ export default class Objects extends THREE.Object3D {
         this.visualObjectsContainer.add(floorMesh);
 
         this.glftLoader = new GLTFLoader();
+
+        // Load the fbx barrel
+        this.fbxLoader = new FBXLoader();
+        this.barrelModel = (await this.fbxLoader.loadAsync(pathBarrelFbxFile)).children[0];
     }
 
-    update() {}
+    update() {
+        //console.log(this.loaderLoaded);
+    }
 
     destroy() {
         console.log("destroy called");
@@ -67,7 +81,8 @@ export default class Objects extends THREE.Object3D {
         }
     }
 
-    addPath() {
+    async addPath() {
+        await 
         // Add two wall on left and right and back
         this.addBasicGeometries([
             {
@@ -115,18 +130,19 @@ export default class Objects extends THREE.Object3D {
                     this.addBasicGeometries([
                         {
                             type: "obstacle",
-                            geometry: new THREE.BoxGeometry(0.5, 0.5, 0.3),
+                            geometry: new THREE.BoxGeometry(0.5, 1, 0.3),
                             color: 0xbf2121,
-                            position: new THREE.Vector3(2.5 - (5 / 3) * index, 0.25, indexLine * sceneConfiguration.lengthBetweenObstacle + 5),
+                            position: new THREE.Vector3(2.5 - (5 / 3) * index, 0.5, indexLine * sceneConfiguration.lengthBetweenObstacle + 5),
                         },
                     ]);
                 } else if (dictOfObjectsInRow[index] == "oil") {
-                    // Create a oil
-                    this.addBasicSprites([
+                    // Create a oil barrel
+                    this.addFbxModel([
                         {
                             type: "award",
-                            size: new THREE.Vector2(0.5, 0.5),
-                            position: new THREE.Vector3(2.5 - (5 / 3) * index, 0.1, indexLine * sceneConfiguration.lengthBetweenObstacle + 5),
+                            mesh: this.barrelModel,
+                            size: new THREE.Vector3(0.001, 0.001, 0.001),
+                            position: new THREE.Vector3(2.5 - (5 / 3) * index, 0, indexLine * sceneConfiguration.lengthBetweenObstacle + 5),
                         },
                     ]);
                 }
@@ -152,23 +168,21 @@ export default class Objects extends THREE.Object3D {
         }
     }
 
-    addBasicSprites(elements) {
+    addFbxModel(elements) {
         for (let index = 0; index < elements.length; index++) {
             const element = elements[index];
 
-            const texture = new THREE.TextureLoader().load(pathOilTexture);
-            texture.anisotrophy = 16;
-            texture.encoding = THREE.sRGBEncoding;
-            const material = new THREE.MeshStandardMaterial({ map: texture });
+            const fbxModel = element.mesh.clone();
+            const fbxMaterial = new THREE.MeshToonMaterial({ color: 0x636363 });
+            fbxModel.material = fbxMaterial;
+            fbxModel.castShadow = true;
+            fbxModel.position.copy(element.position);
+            fbxModel.scale.copy(element.size);
 
-            const spriteMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(element.size.x, element.size.y), material);
-            spriteMesh.position.copy(element.position);
-            spriteMesh.rotation.copy(new THREE.Euler(-Math.PI / 2, 0, Math.PI));
-            spriteMesh.castShadow = true;
             if (element.type == "obstacle") {
-                this.obstaclesContainer.add(spriteMesh);
+                this.obstaclesContainer.add(fbxModel);
             } else if (element.type == "award") {
-                this.awardsContainer.add(spriteMesh);
+                this.awardsContainer.add(fbxModel);
             }
         }
     }

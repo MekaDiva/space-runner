@@ -1,6 +1,5 @@
 import * as THREE from "three";
-import Game, { sceneConfiguration } from "../game";
-import Ui from "./ui";
+import Game from "../game";
 
 class CollisionDetection extends THREE.EventDispatcher {
     constructor() {
@@ -11,7 +10,7 @@ class CollisionDetection extends THREE.EventDispatcher {
 
     detectCollisions () {
         // Create a box for the player on its barrel
-        const playerBox = new THREE.Box3().setFromObject(Game.player.barrel);
+        const playerBox = new THREE.Box3().setFromObject(Game.player.astro);
 
         
         Game.objects.obstaclesContainer.children.forEach(element => {

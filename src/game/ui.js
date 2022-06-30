@@ -1,9 +1,7 @@
 import * as THREE from "three";
 import Game, { sceneConfiguration } from "../game";
 
-const pathArrowIdle = process.env.PUBLIC_URL + "/img/arrowRightIdle.png";
-const pathArrowOver = process.env.PUBLIC_URL + "/img/arrowRightOver.png";
-const pathArrowPress = process.env.PUBLIC_URL + "/img/arrowRightPress.png";
+const pathOilTexture = process.env.PUBLIC_URL + "/img/Oil.png";
 
 class Ui extends THREE.EventDispatcher {
     constructor() {
@@ -19,7 +17,7 @@ class Ui extends THREE.EventDispatcher {
         // Add game explication
         let gameExplication = document.createElement("p");
         gameExplication.id = "gameExplication";
-        gameExplication.innerText = "Use mouse to move the player to collect oil and avoid obstacle \n Success when the oil barrel becames black";
+        gameExplication.innerText = "Use mouse to move the player to collect oil and avoid obstacle \n Success when the oil number reach the target number";
         gameExplication.style.fontSize = "25px";
         gameExplication.style.color = "black";
         gameExplication.style.textAlign = "center";
@@ -31,15 +29,26 @@ class Ui extends THREE.EventDispatcher {
 
         document.body.appendChild(gameExplication);
 
+        // Add the oil image for the score
+        let oilImg = document.createElement("IMG");
+        oilImg.src = pathOilTexture;
+        oilImg.style.position = "absolute";
+        oilImg.style.left = "calc(0%)";
+        oilImg.style.bottom = "calc(0%)";
+        oilImg.style.width = "100px";
+        oilImg.style.height = "100px";
+
+        document.body.appendChild(oilImg);
+
         // Add score for the oil collected
         let gameScore = document.createElement("p");
         gameScore.id = "gameScore";
-        gameScore.innerText = "Oil collected: 0 / 10";
+        gameScore.innerText = "0 / 10";
         gameScore.style.fontSize = "40px";
         gameScore.style.color = "black";
         gameScore.style.position = "absolute";
-        gameScore.style.left = "calc(2%)";
-        gameScore.style.top = "calc(90%)";
+        gameScore.style.left = "calc(10%)";
+        gameScore.style.top = "calc(89%)";
         gameScore.style.width = "500px";
         gameScore.style.height = "100px";
 
@@ -62,7 +71,7 @@ class Ui extends THREE.EventDispatcher {
             startButton.style.height = "100px";
             startButton.style.cursor = "pointer";
             startButton.onmouseenter = (e) => {
-                startButton.style.color = "gray";
+                startButton.style.color = "white";
             };
             startButton.onmouseup = (e) => {
                 Game.start();
@@ -95,7 +104,7 @@ class Ui extends THREE.EventDispatcher {
             resetButton.style.height = "100px";
             resetButton.style.cursor = "pointer";
             resetButton.onmouseenter = (e) => {
-                resetButton.style.color = "gray";
+                resetButton.style.color = "white";
             };
             resetButton.onmouseup = (e) => {
                 Game.reset();
@@ -113,6 +122,7 @@ class Ui extends THREE.EventDispatcher {
     }
 
     toggleAlert(isActive, text = "Alert") {
+        console.log("toggleAlert");
         if (isActive) {
             // Add reset button
             let alert = document.createElement("p");
@@ -122,11 +132,10 @@ class Ui extends THREE.EventDispatcher {
             alert.style.color = "black";
             alert.style.textAlign = "center";
             alert.style.position = "absolute";
-            alert.style.left = "calc(50% - 100px)";
+            alert.style.left = "calc(50% - 250px)";
             alert.style.top = "calc(50% - 50px)";
-            alert.style.width = "200px";
+            alert.style.width = "500px";
             alert.style.height = "100px";
-            alert.style.cursor = "pointer";
 
             document.body.appendChild(alert);
         } else {
@@ -136,7 +145,7 @@ class Ui extends THREE.EventDispatcher {
 
     showCurrentOilScore() {
         let gameScore = document.getElementById("gameScore");
-        gameScore.innerText = "Oil collected: " + sceneConfiguration.data.oilCollected + " / " + sceneConfiguration.targetOilCollected;
+        gameScore.innerText = sceneConfiguration.data.oilCollected + " / " + sceneConfiguration.targetOilCollected;
     }
 }
 

@@ -77,8 +77,10 @@ class Game extends THREE.EventDispatcher {
         this.reset = this.reset.bind(this);
         this.pause = this.pause.bind(this);
         this.mousemove = this.mousemove.bind(this);
-
         this.movePlayer = this.movePlayer.bind(this);
+        this.playerCollectOil = this.playerCollectOil.bind(this);
+        this.playerTouchObstacle = this.playerTouchObstacle.bind(this);
+        this.playerSuccess = this.playerSuccess.bind(this);
 
         this.objects = null;
         this.player = null;
@@ -128,7 +130,7 @@ class Game extends THREE.EventDispatcher {
 
         const dirLight = new THREE.DirectionalLight(0xffffff, 1);
         dirLight.color.setHSL(0.1, 1, 0.95);
-        dirLight.position.set(-1, 1.75, 1);
+        dirLight.position.set(1, 1.75, 1);
         dirLight.position.multiplyScalar(30);
         this.scene.add(dirLight);
 
@@ -213,9 +215,12 @@ class Game extends THREE.EventDispatcher {
 
         // Add the surrounding objects
         this.objects = new Objects();
-        this.objects.init();
-
-        this.objects.addPath(sceneConfiguration.courseLength);
+        
+        this.objects.init().then(x => {
+            this.objects.addPath(sceneConfiguration.courseLength);
+        })
+        //this.objects.init();
+        //this.objects.addPath(sceneConfiguration.courseLength);
 
         this.scene.add(this.objects);
 
@@ -373,16 +378,28 @@ class Game extends THREE.EventDispatcher {
         this.player.idleClip.play();
 
         Ui.toggleAlert(true, "Mission failed");
-        setTimeout(Ui.toggleAlert(false), 3000);
-        setTimeout(Ui.toggleResetButton(true), 3000);
+        gsap.delayedCall(2, () => {
+            Ui.toggleAlert(false);
+        });
+        gsap.delayedCall(2, () => {
+            Ui.toggleResetButton(true);
+        });
     }
 
     playerSuccess() {
         console.log("Mission success");
 
+        sceneConfiguration.playerMoving = false;
+        this.player.runClip.stop();
+        this.player.idleClip.play();
+
         Ui.toggleAlert(true, "Mission success");
-        setTimeout(Ui.toggleAlert(false), 3000);
-        setTimeout(Ui.toggleResetButton(true), 3000);
+        gsap.delayedCall(2, () => {
+            Ui.toggleAlert(false);
+        });
+        gsap.delayedCall(2, () => {
+            Ui.toggleResetButton(true);
+        });
     }
 }
 
