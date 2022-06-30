@@ -47,10 +47,11 @@ class Ui extends THREE.EventDispatcher {
         gameScore.style.fontSize = "40px";
         gameScore.style.color = "black";
         gameScore.style.position = "absolute";
-        gameScore.style.left = "calc(10%)";
-        gameScore.style.top = "calc(89%)";
-        gameScore.style.width = "500px";
-        gameScore.style.height = "100px";
+        gameScore.style.textAlign = "center";
+        gameScore.style.left = "calc(0%)";
+        gameScore.style.bottom = "calc(0%)";
+        gameScore.style.width = "300px";
+        gameScore.style.height = "30px";
 
         document.body.appendChild(gameScore);
     }
