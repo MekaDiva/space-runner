@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import Game, { sceneConfiguration } from "../game";
+import Ui from "./ui";
 
 class CollisionDetection extends THREE.EventDispatcher {
     constructor() {
@@ -17,9 +18,7 @@ class CollisionDetection extends THREE.EventDispatcher {
             const obstacleBox = new THREE.Box3().setFromObject(element);
 
             if (obstacleBox.intersectsBox(playerBox)) {
-                console.log("Obstacle touched");
-
-                Game.playerDie();
+                Game.playerTouchObstacle();
             }
         });
 
@@ -27,10 +26,9 @@ class CollisionDetection extends THREE.EventDispatcher {
             const awardBox = new THREE.Box3().setFromObject(element);
 
             if (awardBox.intersectsBox(playerBox)) {
-                sceneConfiguration.data.oilCollected += 1;
-                console.log("oilCollected: " + sceneConfiguration.data.oilCollected);
+                Game.objects.awardsContainer.remove(element);
 
-                Game.objects.awardsContainer.remove(element); 
+                Game.playerCollectOil();
             }
         });
     }

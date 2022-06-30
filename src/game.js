@@ -36,6 +36,9 @@ export const sceneConfiguration = {
         oilCollected: 0,
     },
 
+    // The target of number of oil collected
+    targetOilCollected: 10,
+
     // The length of the current level, increases as levels go up
     courseLength: 500,
 
@@ -206,6 +209,7 @@ class Game extends THREE.EventDispatcher {
     initGame() {
         // Init the UI
         Ui.init();
+        Ui.toggleStartButton(true);
 
         // Add the surrounding objects
         this.objects = new Objects();
@@ -323,12 +327,16 @@ class Game extends THREE.EventDispatcher {
         this.player.runClip.stop();
         this.player.idleClip.play();
         this.objects.position.set(0, 0, 0);
-        sceneConfiguration.data.oilCollected = 0;
 
         // Reset all the objects
         this.objects.destroy();
         this.objects.init();
         this.objects.addPath(sceneConfiguration.courseLength);
+
+        // Reset the UI
+        sceneConfiguration.data.oilCollected = 0;
+        Ui.showCurrentOilScore();
+        Ui.toggleStartButton(true);
     }
 
     pause() {
@@ -347,12 +355,34 @@ class Game extends THREE.EventDispatcher {
         this.player.position.set(playerX, 0, 0);
     }
 
-    playerDie() {
-        console.log("playerDie");
+    playerCollectOil() {
+        sceneConfiguration.data.oilCollected += 1;
+        console.log("oilCollected: " + sceneConfiguration.data.oilCollected);
+        Ui.showCurrentOilScore();
+
+        if (sceneConfiguration.data.oilCollected == sceneConfiguration.targetOilCollected) {
+            this.playerSuccess();
+        }
+    }
+
+    playerTouchObstacle() {
+        console.log("Mission failed");
 
         sceneConfiguration.playerMoving = false;
         this.player.runClip.stop();
         this.player.idleClip.play();
+
+        Ui.toggleAlert(true, "Mission failed");
+        setTimeout(Ui.toggleAlert(false), 3000);
+        setTimeout(Ui.toggleResetButton(true), 3000);
+    }
+
+    playerSuccess() {
+        console.log("Mission success");
+
+        Ui.toggleAlert(true, "Mission success");
+        setTimeout(Ui.toggleAlert(false), 3000);
+        setTimeout(Ui.toggleResetButton(true), 3000);
     }
 }
 
